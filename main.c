@@ -16,6 +16,8 @@ typedef struct node {
     struct node *parent;
 } NODE;
 
+NODE *head = NULL;
+
 NODE* create_node(int data){
     NODE *result = NULL;
     result = (NODE*)malloc(sizeof(NODE));
@@ -23,28 +25,189 @@ NODE* create_node(int data){
     return result;
 }
 
-void update_height(NODE **new_node, NODE **head){
+int update_height(NODE **new_node){
     NODE *tmp = *new_node;
-    int tmp_height = 0;
+    int tmp_height = tmp->height;
 
-    while(tmp != *head){
+    do {
+        if (tmp->height > tmp_height) {
+            return 0;
+        }
+        tmp->height = tmp_height;
+        printf("Height of node with number %d is %d\n", tmp->data, tmp->height);
         tmp = tmp->parent;
-    }
+        tmp_height++;
+    } while(tmp != NULL);
+    return 1;
 }
 
-int insert(NODE *new_node, NODE **head){
-    NODE *tmp = *head;
+int rotate_left(NODE **node) {
+    NODE *tmp = *node;
+    NODE *right = tmp->right;
+
+    int isRoot = 0;
+    if (right == NULL) {
+        return 0;
+    }
+    if (head == tmp) {
+        head = right;
+        isRoot = 1;
+        right->parent = NULL;
+    } else {
+        if(tmp->data < tmp->parent->data) {
+            (tmp->parent)->left = right;
+        } else {
+            (tmp->parent)->right = right;
+        }
+    }
+    if(isRoot == 0) {
+        right->parent = tmp->parent;
+    }
+    tmp->parent = right;
+    tmp->right = right->left;
+    right->left = tmp;
+
+    if (tmp->right == NULL){
+        if(tmp->left == NULL){
+            tmp->height = 0;
+        } else {
+            tmp->height = tmp->left->height + 1;
+        }
+    } else if(tmp->left == NULL) {
+        tmp->height = tmp->right->height + 1;
+    }
+    else if (tmp->right->height > tmp->left->height) {
+        tmp->height = tmp->right->height + 1;
+    } else {
+        tmp->height = tmp->left->height + 1;
+    }
+
+    if (right->right == NULL) {
+        right->height = right->left->height + 1;
+    }
+    else if (right->right->height > right->left->height) {
+        right->height = right->right->height + 1;
+    } else {
+        right->height = right->left->height + 1;
+    }
+
+    update_height(&right);
+
+    return 1;
+}
+
+int rotate_right(NODE **node) {
+    NODE *tmp = *node;
+    NODE *left = tmp->left;
+
+    int isRoot = 0;
+    if (left == NULL) {
+        return 0;
+    }
+    if (head == tmp) {
+        head = left;
+        isRoot = 1;
+        left->parent = NULL;
+    } else {
+        if(tmp->data < tmp->parent->data) {
+            (tmp->parent)->left = left;
+        } else {
+            (tmp->parent)->right = left;
+        }
+    }
+    if(isRoot == 0) {
+        left->parent = tmp->parent;
+    }
+    tmp->parent = left;
+    tmp->left = left->right;
+    left->right = tmp;
+
+
+    if (tmp->right == NULL){
+        if(tmp->left == NULL){
+            tmp->height = 0;
+        } else {
+            tmp->height = tmp->left->height + 1;
+        }
+    } else if(tmp->left == NULL) {
+        tmp->height = tmp->right->height + 1;
+    }
+    else if (tmp->right->height > tmp->left->height) {
+        tmp->height = tmp->right->height + 1;
+    } else {
+        tmp->height = tmp->left->height + 1;
+    }
+
+    if (left->left == NULL) {
+        left->height = left->right->height + 1;
+    }
+    else if (left->right->height > left->left->height) {
+        left->height = left->right->height + 1;
+    } else {
+        left->height = left->left->height + 1;
+    }
+    update_height(&left);
+
+    return 1;
+}
+
+int align(NODE **node) {
+    NODE *tmp = *node;
+    int bf;
+
+    while(tmp != NULL) {
+        if(tmp->left == NULL) {
+            if(tmp->right == NULL) {
+                tmp = tmp->parent;
+                continue;
+            }
+            if(tmp->right->height >= 1) {
+                rotate_left(&tmp);
+            }
+            tmp = tmp->parent;
+            continue;
+        }
+        if(tmp->right == NULL) {
+            if(tmp->left->height >= 1) {
+                rotate_right(&tmp);
+            }
+            tmp = tmp->parent;
+            continue;
+        }
+
+        bf = tmp->right->height - tmp->left->height;
+
+        if(bf < 2 && bf > -2) {
+            tmp = tmp->parent;
+            continue;
+        }
+        if(bf <= -2) {
+            if(tmp->left->right != NULL) {
+                rotate_left(&(tmp->left));
+            }
+            rotate_right(&tmp);
+        } else if(bf >= 2) {
+            if(tmp->right->left != NULL) {
+                rotate_right(&(tmp->right));
+            }
+            rotate_left(&tmp);
+        }
+        tmp = tmp->parent;
+    }
+
+    return 0;
+}
+
+int insert(NODE *new_node){
+    NODE *tmp = head;
 
     new_node->right = NULL;
     new_node->left = NULL;
     new_node->parent = NULL;
     new_node->height = 0;
 
-    int tmp_height = 0;
-
     if(tmp == NULL){
-        *head = new_node;
-        printf("%d\n", (*head)->data);
+        head = new_node;
         return 0;
     }
     while(tmp != NULL){
@@ -58,17 +221,22 @@ int insert(NODE *new_node, NODE **head){
         } else if(new_node->data > tmp->data && tmp->right == NULL){
             tmp->right = new_node;
             new_node->parent = tmp;
+            update_height(&new_node);
+            align(&(tmp->parent));
             return 1;
         } else{
             tmp->left = new_node;
             new_node->parent = tmp;
+            update_height(&new_node);
+            align(&(tmp->parent));
             return 1;
         }
     }
     return 0;
 }
 
-/////////////////////////////////
+
+///////////////////////////////// PRINTF TREE
 
 int _print_t(NODE *tree, int is_left, int offset, int depth, char s[20][255])
 {
@@ -141,20 +309,29 @@ void print_t(NODE *tree)
 ////////////////////////////////
 
 int main() {
-    NODE *head = NULL;
-    insert(create_node(5), &head);
-    insert(create_node(10), &head);
-    insert(create_node(6), &head);
-    insert(create_node(8), &head);
-    insert(create_node(3), &head);
-    insert(create_node(4), &head);
-    insert(create_node(1), &head);
-    insert(create_node(11), &head);
-    insert(create_node(2), &head);
-    insert(create_node(0), &head);
-    insert(create_node(7), &head);
-    insert(create_node(9), &head);insert(create_node(1), &head);
+//    insert(create_node(5));
+//    insert(create_node(10));
+//    insert(create_node(6));
+//    insert(create_node(8));
+//    insert(create_node(3));
+//    insert(create_node(4));
+//    insert(create_node(1));
+//    insert(create_node(11));
+//    insert(create_node(2));
+//    insert(create_node(0));
+//    insert(create_node(7));
+//    insert(create_node(9));
+//    insert(create_node(1));
 
+    insert(create_node(24));
+    insert(create_node(12));
+    insert(create_node(5));
     print_t(head);
+    insert(create_node(30));
+    insert(create_node(20));
+    insert(create_node(45));
+    print_t(head);
+
+
     return 0;
 }
