@@ -153,7 +153,7 @@ int rotate_right(NODE **node) {
 
 int align(NODE **node) {
     NODE *tmp = *node;
-    int bf;
+    int bf, bfr, bfl;
 
     while(tmp != NULL) {
         if(tmp->left == NULL) {
@@ -162,6 +162,9 @@ int align(NODE **node) {
                 continue;
             }
             if(tmp->right->height >= 1) {
+                if(tmp->right->left != NULL && tmp->right->right == NULL) {
+                    rotate_right(&(tmp->right));
+                }
                 rotate_left(&tmp);
             }
             tmp = tmp->parent;
@@ -169,6 +172,9 @@ int align(NODE **node) {
         }
         if(tmp->right == NULL) {
             if(tmp->left->height >= 1) {
+                if(tmp->left->right != NULL && tmp->left->left == NULL) {
+                    rotate_left(&(tmp->left));
+                }
                 rotate_right(&tmp);
             }
             tmp = tmp->parent;
@@ -177,17 +183,41 @@ int align(NODE **node) {
 
         bf = tmp->right->height - tmp->left->height;
 
+        if(tmp->right->right != NULL) {
+            if(tmp->right->left != NULL) {
+                bfr = tmp->right->right->height - tmp->right->left->height;
+            } else {
+                bfr = tmp->right->right->height + 1;
+            }
+        } else if(tmp->right->left != NULL) {
+            bfr = (tmp->right->left->height + 1) * (-1);
+        } else {
+            bfr = 0;
+        }
+
+        if(tmp->left->right != NULL) {
+            if(tmp->left->left != NULL) {
+                bfl = tmp->left->right->height - tmp->left->left->height;
+            } else {
+                bfl = tmp->left->right->height + 1;
+            }
+        } else if(tmp->left->left != NULL) {
+            bfl = (tmp->left->left->height + 1) * (-1);
+        } else {
+            bfl = 0;
+        }
+
         if(bf < 2 && bf > -2) {
             tmp = tmp->parent;
             continue;
         }
         if(bf <= -2) {
-            if(tmp->left->right != NULL) {
+            if(bfl > bfr) {
                 rotate_left(&(tmp->left));
             }
             rotate_right(&tmp);
         } else if(bf >= 2) {
-            if(tmp->right->left != NULL) {
+            if(bfr < bfl) {
                 rotate_right(&(tmp->right));
             }
             rotate_left(&tmp);
@@ -222,13 +252,13 @@ int insert(NODE *new_node){
             tmp->right = new_node;
             new_node->parent = tmp;
             update_height(&new_node);
-            align(&(tmp->parent));
+            align(&tmp);
             return 1;
         } else{
             tmp->left = new_node;
             new_node->parent = tmp;
             update_height(&new_node);
-            align(&(tmp->parent));
+            align(&tmp);
             return 1;
         }
     }
@@ -319,18 +349,51 @@ int main() {
 //    insert(create_node(11));
 //    insert(create_node(2));
 //    insert(create_node(0));
+//    print_t(head);
 //    insert(create_node(7));
 //    insert(create_node(9));
 //    insert(create_node(1));
+//
+//    print_t(head);
 
-    insert(create_node(24));
-    insert(create_node(12));
-    insert(create_node(5));
+//    insert(create_node(24));
+//    insert(create_node(12));
+//    insert(create_node(5));
+//    print_t(head);
+//    insert(create_node(30));
+//    insert(create_node(20));
+//    insert(create_node(45));
+//    print_t(head);
+//    insert(create_node(11));
+//    insert(create_node(13));
+//    insert(create_node(9));
+//    print_t(head);
+
+//    for (int i = 0; i < 17; ++i) {
+//        insert(create_node(i));
+//    }
+//    print_t(head);
+
+//    insert(create_node(3));
+//    insert(create_node(1));
+//    insert(create_node(2));
+//    print_t(head);
+
+    insert(create_node(40));
+    print_t(head);
+    insert(create_node(20));
+    print_t(head);
+    insert(create_node(10));
+    print_t(head);
+    insert(create_node(25));
     print_t(head);
     insert(create_node(30));
-    insert(create_node(20));
-    insert(create_node(45));
     print_t(head);
+    insert(create_node(22));
+    print_t(head);
+    insert(create_node(50));
+    print_t(head);
+
 
 
     return 0;
