@@ -10,7 +10,7 @@
 #include <time.h>
 
 typedef struct node {   //vytvorenie struktury vrchola stromu
-    int data;
+    long long data;
     int height;
     struct node *right;
     struct node *left;
@@ -19,7 +19,7 @@ typedef struct node {   //vytvorenie struktury vrchola stromu
 
 NODE *head = NULL;  //globalna premenna, ukazujuca na root stromu
 
-NODE* create_node(int data){    //funkcia dostane data a vytvori uzol NODE
+NODE* create_node(long long data){    //funkcia dostane data a vytvori uzol NODE
     NODE *result = NULL;
     result = (NODE*)malloc(sizeof(NODE));
     result->data = data;
@@ -266,7 +266,7 @@ int insert(NODE *new_node){     //funkcia insert dostane uzol z create_node, pre
     return 0;
 }
 
-int search(int x) {     //funkcia search dostane na vstupe cislo a vrati pocet krokov, ktore bolo treba aby ho nasla v strome
+long long search(long long x) {     //funkcia search dostane na vstupe cislo a vrati pocet krokov, ktore bolo treba aby ho nasla v strome
     NODE *tmp = head;
     int i = 0;
     while (tmp != NULL) {   //kym nie je na konci stromu, porovnava hodnotu x s hodnotou uzla tmp
@@ -291,7 +291,7 @@ int _print_t(NODE *tree, int is_left, int offset, int depth, char s[20][255])
 
     if (!tree) return 0;
 
-    sprintf(b, "(%03d)", tree->data);
+    sprintf(b, "(%03llu)", tree->data);
 
     int left  = _print_t(tree->left,  1, offset,                depth + 1, s);
     int right = _print_t(tree->right, 0, offset + left + width, depth + 1, s);
@@ -411,26 +411,28 @@ int main() {
 //    print_t(head);
 
 
-    int max = 1000000;
-    int toFind = 500000;
+    long long max = 10000000;
+    long long toFind = 5000000;
+    long long from = 1000000000;
     clock_t start, end;
     double cpu_time_used;
 
     start = clock();    //zapne casovac
 
-    for (int i = 0; i < max; ++i) {     //vytvori strom z max cisel (1000000)
+    for (long long i = from; i < from + max; ++i) {     //vytvori strom z max cisel (1000000)
         insert(create_node(i));
     }
-    int num;
-    for (int i = 0; i < toFind; ++i) {  //hlada nahodne cisla od 0 po max v strome toFind-krat (500000)
-        num = (rand() % (max));
+    long long num;
+    for (long long i = from; i < from + toFind; ++i) {  //hlada nahodne cisla od 0 po max v strome toFind-krat (500000)
+        num = (rand() % (max)) + from;
         search(num);
     }
 
     end = clock();      //skonci casovac
     cpu_time_used = ((double) (end - start));   //vyrata cas
-    printf("finding %d times in tree size %d\n", toFind, max);      //vypise vysledok
+    printf("finding %llu times in tree size %llu\n", toFind, max);      //vypise vysledok
     printf("Time: %dms\n", (int) cpu_time_used);
+    printf("Max height of tree is %d\n", head->height);
 
 
     return 0;
